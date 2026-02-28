@@ -1,0 +1,33 @@
+import os
+import sys
+import zipfile
+import subprocess
+from pathlib import Path
+
+def build_package():
+    # Create temp dir
+    temp_dir = Path("temp_lambda")
+    temp_dir.mkdir(exist_ok=True)
+    
+    # Install requirements if exists
+    if Path("requirements.txt").exists():
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", 
+            "-r", "requirements.txt", "-t", str(temp_dir)
+        ])
+    
+    # Copy source files
+    for file in Path(".").glob("*.py"):
+        (temp_dir / file.name).write_bytes(file.read_bytes())
+    
+    # Create zip
+    with zipfile.ZipFile("lambda.zip", "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(temp_dir):
+            for file in files:
+                zf.write(os.path.join(root, file), 
+                        os.path.relpath(os.path.join(root, file), temp_dir))
+    
+    print("Created lambda.zip")
+
+if __name__ == "__main__":
+    build_package()
