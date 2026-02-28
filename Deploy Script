@@ -1,0 +1,17 @@
+import boto3
+import zipfile
+
+def deploy():
+    lambda_client = boto3.client('lambda')
+    
+    with open('lambda.zip', 'rb') as f:
+        zip_data = f.read()
+    
+    response = lambda_client.update_function_code(
+        FunctionName=os.getenv('LAMBDA_NAME'),
+        ZipFile=zip_data
+    )
+    print(f"Deployed version: {response['Version']}")
+
+if __name__ == "__main__":
+    deploy()
